@@ -1,15 +1,16 @@
 import { Module } from '@nestjs/common';
 import { CementeriesService } from './cementeries.service';
 import { CementeriesController } from './cementeries.controller';
-import { MongooseModule } from '@nestjs/mongoose';
-import { Cemetery, CemeterySchema } from './cemetery.schema';
+import { Cemetery } from './cemetery.entity';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { City } from '../cities/city.entity';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([{ name: Cemetery.name, schema: CemeterySchema }])
+    TypeOrmModule.forFeature([Cemetery, City])
   ],
   providers: [CementeriesService],
   controllers: [CementeriesController],
-  exports: [MongooseModule],
+  exports: [TypeOrmModule],
 })
-export class CementeriesModule {}
+export class CementeriesModule { }

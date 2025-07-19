@@ -1,28 +1,34 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dtos/createUser.dto';
+import ApproveUserDto from './dtos/approveUser.dto';
 
-@Controller('user')
+@Controller('users')
 export class UserController {
-  constructor(private readonly userService: UserService) {}
-
-  @Get('/test')
-  async test() {
-    return { message: 'UserController is working!' };
-  }
+  constructor(private readonly userService: UserService) { }
 
   @Post()
   async create(@Body() user: CreateUserDto) {
     return this.userService.createUser(
-      user.username,
+      user.name,
+      user.lastname,
       user.email,
       user.password,
     );
   }
 
+  @Patch('/approve-user')
+  async approve(@Body() bodyData: ApproveUserDto) {
+    return await this.userService.approveUser(bodyData.penddingUserId, bodyData.approverUserId);
+  }
+
+  @Get('/pending')
+  async getPendding() {
+    return this.userService.getPendingApprovals();
+  }
+
   @Get('/:id')
   async get(@Param('id') id: string) {
-    console.log(id)
     return this.userService.findById(id);
   }
 }

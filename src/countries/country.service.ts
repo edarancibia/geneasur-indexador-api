@@ -1,17 +1,18 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Country, CountryDocument } from './country.schema';
-import { Model } from 'mongoose';
+import { Country } from './country.entity';
 import { CreateCountryDto } from './dtos/createCountry.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class CountryService {
     constructor(
-        @InjectModel(Country.name) private countryModel: Model<CountryDocument>,
+      @InjectRepository(Country)
+      private readonly countryRepo: Repository<Country>,
       ) {}
 
       async getCountryByName(name: string): Promise<Country> {
-        const countryDb = await this.countryModel.findOne({ name: name });
+        const countryDb = await this.countryRepo.findOne({ where: { name: name } });
 
         if(!countryDb) {
             throw new HttpException('Country does not exist', HttpStatus.NOT_FOUND)
@@ -23,12 +24,12 @@ export class CountryService {
       async createCountry(createCountryDto: CreateCountryDto): Promise<Country> {
         const { name } = createCountryDto;
       
-        const newCountry = new this.countryModel({ name });
+        const newCountry = this.countryRepo.create({ name });
       
-        return newCountry.save();
+        return await this.countryRepo.save(newCountry);
       }
     
       async findAllCountries(): Promise<Country[]> {
-        return this.countryModel.find();
+        return this.countryRepo.find();
       }
 }

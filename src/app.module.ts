@@ -10,6 +10,8 @@ import { UserModule } from './users/user.module';
 import { DatabaseModule } from './database/database.module';
 import { ConfigModule } from '@nestjs/config';
 import { CountriesModule } from './countries/countries.module';
+import { CommonModule } from './common/common.module';
+import { MailModule } from './mail/mail.module';
 
 @Module({
   imports: [
@@ -23,6 +25,8 @@ import { CountriesModule } from './countries/countries.module';
     AuthModule,
     DatabaseModule,
     CountriesModule,
+    CommonModule,
+    MailModule,
   ],
   controllers: [AppController, UserController],
   providers: [AppService],

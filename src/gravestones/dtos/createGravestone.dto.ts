@@ -1,16 +1,11 @@
-import { IsNotEmpty, IsDateString, IsMongoId, IsString, IsOptional, IsUUID } from 'class-validator';
+import { IsNotEmpty, IsDateString, IsString, IsUUID } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateGravestoneDto {
-  // @ApiProperty({ description: 'Inscription on the gravestone' })
-  // @IsString()
-  // @IsOptional()
-  // inscription?: string;
-
   @ApiProperty({ description: 'ID of the cemetery associated with the gravestone' })
   @IsNotEmpty()
   @IsUUID()
-  cemetery: string;
+  cemeteryId: string;
 
   @ApiProperty()
   @IsNotEmpty()

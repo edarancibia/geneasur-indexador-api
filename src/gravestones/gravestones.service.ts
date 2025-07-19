@@ -4,35 +4,40 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Gravestone, GravestoneDocument } from './gravestone.schema';
-import { Model } from 'mongoose';
+import { Gravestone } from './gravestone.entity';
 import { CreateGravestoneDto } from './dtos/createGravestone.dto';
-import { Cemetery, CemeteryDocument } from '../cementeries/cemetery.schema';
+import { Cemetery } from '../cementeries/cemetery.entity';
+import { InjectRepository } from '@nestjs/typeorm';
+import { ILike, Repository } from 'typeorm';
 
 @Injectable()
 export class GravestonesService {
   constructor(
-    @InjectModel(Gravestone.name)
-    private gravestoneModel: Model<GravestoneDocument>,
-    @InjectModel(Cemetery.name) private cemeteryModel: Model<CemeteryDocument>,
-  ) {}
+    @InjectRepository(Gravestone)
+    private gravestoneRepo: Repository<Gravestone>,
+    @InjectRepository(Cemetery)
+    private cemeteryRepo: Repository<Cemetery>,
+  ) { }
 
-  async create(gravestone: CreateGravestoneDto): Promise<Gravestone> {
-    const { name, lastname, cemetery, dateOfDeath } = gravestone;
+  async create(gravestone: CreateGravestoneDto, secureUrl: string): Promise<Gravestone> {
+    const { name, lastname, cemeteryId, dateOfDeath } = gravestone;
 
-    const newGravestone = new this.gravestoneModel({
+    const cemetery = await this.cemeteryRepo.findOne({ where: { id: cemeteryId } });
+
+    const newGravestone = this.gravestoneRepo.create({
       cemetery,
       name,
       lastname,
       dateOfDeath,
     });
 
-    return await newGravestone.save();
+    newGravestone.url = secureUrl;
+
+    return await this.gravestoneRepo.save(newGravestone);
   }
 
   async findGravestoneById(gravestoneId: string): Promise<Gravestone> {
-    const result = await this.gravestoneModel.findOne({ id: gravestoneId });
+    const result = await this.gravestoneRepo.findOne({ where: { id: gravestoneId } });
 
     if (!result) {
       throw new HttpException('No matching results', HttpStatus.NOT_FOUND);
@@ -43,35 +48,33 @@ export class GravestonesService {
 
   async findGravestonesByCemeteryAndLastname(
     cemeteryId: string,
+    name: string,
     lastname: string,
   ): Promise<Gravestone[]> {
-    console.log(
-      'Finding gravestones by cemeteryId:',
-      cemeteryId,
-      'and lastname:',
-      lastname,
-    );
-
-    const cemetery = await this.cemeteryModel
-      .findOne({ id: cemeteryId })
-      .lean()
-      .exec();
+    const cemetery = await this.cemeteryRepo
+      .findOne({ where: { id: cemeteryId } });
 
     if (!cemetery) {
       throw new NotFoundException(`Cemetery with ID ${cemeteryId} not found`);
     }
 
-    const result = await this.gravestoneModel
-      .find({
-        cemetery: cemetery.id,
-        lastname: lastname,
-      })
-      .exec();
+    const gravestones = await this.gravestoneRepo.find({
+      where: [
+        {
+          cemetery: { id: cemeteryId },
+          name: ILike(`%${name}%`),
+        },
+        {
+          cemetery: { id: cemeteryId },
+          lastname: ILike(`%${lastname}%`),
+        },
+      ],
+    });
 
-    if (!result || result.length === 0) {
+    if (!gravestones || gravestones.length === 0) {
       throw new HttpException('No matching results', HttpStatus.NOT_FOUND);
     }
 
-    return result;
+    return gravestones;
   }
 }
