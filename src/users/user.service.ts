@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { User } from './user.entity';
 import * as bcrypt from 'bcrypt';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -87,5 +87,25 @@ export class UserService {
     });
 
     return users;
+  }
+
+  async passwordRecovery(
+    userEmail: string,
+    newPassword: string,
+  ): Promise<User> {
+    try {
+      const userDb = await this.userRepo.findOne({
+        where: { email: userEmail },
+      });
+
+      if (!userDb) {
+        throw new NotFoundException('Usuario inválido');
+      }
+
+      userDb.password = newPassword;
+      return await this.userRepo.save(userDb);
+    } catch (error) {
+      throw error;
+    }
   }
 }

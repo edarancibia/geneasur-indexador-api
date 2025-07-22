@@ -4,8 +4,7 @@ import {
   PrimaryGeneratedColumn,
   CreateDateColumn,
   UpdateDateColumn,
-  BeforeInsert,
-  BeforeUpdate,
+  BeforeInsert
 } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 
@@ -39,7 +38,6 @@ export class User {
   enabled: boolean;
 
   @BeforeInsert()
-  @BeforeUpdate()
   async hashPassword() {
     if (this.password) {
       const salt = await bcrypt.genSalt();
