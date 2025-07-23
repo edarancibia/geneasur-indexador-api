@@ -12,6 +12,7 @@ import { ConfigModule } from '@nestjs/config';
 import { CountriesModule } from './countries/countries.module';
 import { CommonModule } from './common/common.module';
 import { MailModule } from './mail/mail.module';
+import { HealthController } from './health.controller';
 
 @Module({
   imports: [
@@ -28,7 +29,7 @@ import { MailModule } from './mail/mail.module';
     CommonModule,
     MailModule,
   ],
-  controllers: [AppController, UserController],
+  controllers: [AppController, UserController, HealthController],
   providers: [AppService],
 })
 export class AppModule {}
