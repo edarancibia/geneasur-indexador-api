@@ -13,6 +13,7 @@ import { CountriesModule } from './countries/countries.module';
 import { CommonModule } from './common/common.module';
 import { MailModule } from './mail/mail.module';
 import { HealthController } from './health.controller';
+import { CementeriesService } from './cementeries/cementeries.service';
 
 @Module({
   imports: [
@@ -30,6 +31,6 @@ import { HealthController } from './health.controller';
     MailModule,
   ],
   controllers: [AppController, UserController, HealthController],
-  providers: [AppService],
+  providers: [AppService, CementeriesService],
 })
 export class AppModule {}
