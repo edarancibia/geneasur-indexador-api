@@ -4,6 +4,7 @@ import * as bcrypt from 'bcrypt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UserApprovalCronService } from './userApproval.cron.service';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class UserService {
@@ -13,22 +14,33 @@ export class UserService {
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
     private readonly appovalCron: UserApprovalCronService,
+    private readonly configService: ConfigService,
   ) { }
 
   async createUser(name: string, lastname: string, email: string, password: string): Promise<User> {
     const userDb = await this.findByEmail(email);
+    let enabledUserRestriction = true;
 
     if (userDb) {
       throw new HttpException('El Email ya está registrado', HttpStatus.CONFLICT)
     }
     const newUser = this.userRepo.create({ name, lastname, email, password });
 
+    if(this.configService.get<string>('ALLOW_USER_CREATION') == 'true') {
+      this.logger.log(`[UserService] createUser: enabledUserRestriction disabled`);
+      
+      newUser.enabled = true;
+      enabledUserRestriction = false;
+    }
+
     const createdUser = await this.userRepo.save(newUser);
 
     const adminsUsers = await this.userRepo.find({ where: { role: 'admin' } });
     const adminMails: string[] = adminsUsers.map(user => user.email);
 
-    this.appovalCron.scheduleExecutionForUser(newUser, adminMails, true);
+    if(enabledUserRestriction) {
+      this.appovalCron.scheduleExecutionForUser(newUser, adminMails, true);
+    }
 
     return createdUser;
   }
